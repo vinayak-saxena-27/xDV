@@ -18,7 +18,7 @@ covered_ids = frames['id'].unique()
 covered_events = events[events['id'].isin(covered_ids)]
 print(covered_events["type"].value_counts())
 
-#calculate the visible_area column in frames
+#calculating the visible_area column in frames in terms of coordinates and area
 def parse_visible_area(visible_area_str):
     try:
         flat = ast.literal_eval(visible_area_str)
@@ -36,3 +36,5 @@ def compute_area(raw):
 frames["visible_area_coords"] = frames["visible_area"].apply(parse_visible_area)
 frames["visible_area_size"] = frames["visible_area"].apply(compute_area)
 print(frames["visible_area_size"].describe())
+
+#checking relevance of the visible_area

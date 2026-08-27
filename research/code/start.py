@@ -5,8 +5,7 @@ import pandas as pd
 complist = sb.competitions()
 print(complist.head())
 
-#creating dataframes for match 3857276
-MATCH_ID = 3857276
+MATCH_ID = 38
 events = sb.events(match_id = MATCH_ID)
 frames = sb.frames(match_id = MATCH_ID)
 
