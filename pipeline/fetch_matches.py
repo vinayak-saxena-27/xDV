@@ -1,14 +1,3 @@
-"""Bulk-fetch StatsBomb open data (events + 360 frames) for every match.
-
-Writes one parquet per match under data/raw/{events,frames}/ and tracks progress
-in data/raw/_manifest.csv so the run is resumable.
-
-Usage:
-    python fetch_matches.py                # resume; build match index if missing
-    python fetch_matches.py --refresh      # rebuild the match index first
-    python fetch_matches.py --retry-360    # also re-attempt matches whose 360
-                                           # frames previously failed ("partial")
-"""
 import sys
 import time
 from pathlib import Path
@@ -24,6 +13,13 @@ for d in (EVENTS_DIR, FRAMES_DIR):
 
 MANIFEST_COLS = ["match_id", "competition_id", "season_id", "has_360",
                  "n_events", "n_frames", "status", "error", "fetched_at"]
+
+# columns kept from sb.matches() for the cached index. The *_manager_* columns are
+# dropped on purpose: statsbombpy comma-joins them for multi-manager matches
+# ("620, 238"), which mixes str into an otherwise-int column and breaks to_parquet.
+INDEX_COLS = ["match_id", "competition_id", "season_id", "season_has_360",
+              "match_status_360", "match_date", "competition", "season",
+              "home_team", "away_team", "match_week", "competition_stage"]
 
 
 #reads the manifest, keeping only the latest row per match_id
@@ -62,6 +58,7 @@ def build_match_index() -> pd.DataFrame:
     if not out:
         raise SystemExit("no match lists could be fetched - check your connection")
     matches = pd.concat(out, ignore_index = True)
+    matches = matches[[c for c in INDEX_COLS if c in matches.columns]]
     print(f"match index: {len(matches)} matches from {len(out)}/{len(comps)} comp-seasons")
     # NB: cached even on partial success - use --refresh to rebuild if this run
     # only reached some comp-seasons
